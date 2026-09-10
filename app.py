@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-
 
 st.title("BioValor AI")
 st.subheader("From Biological Waste to Valuable Resources")
