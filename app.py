@@ -1,7 +1,12 @@
 import streamlit as st
 import pandas as pd
 
-from ai.generator import AIAnalysisError, MissingAPIKeyError, generate_analysis
+from ai.generator import (
+	AIAnalysisError,
+	MissingAPIKeyError,
+	ask_followup_question,
+	generate_analysis,
+)
 from utils.data_loader import get_waste_data
 from utils.scoring import calculate_valorization_score
 from utils.validation import AIResponseValidationError, validate_analysis_response
@@ -19,6 +24,7 @@ SUPPORTED_WASTES = [
 	"Shrimp shells",
 	"Sawdust / wood-processing residue",
 ]
+ANALYSIS_STATE_KEY = "biovalor_analysis_context"
 
 
 def display_ai_analysis(analysis):
@@ -135,6 +141,7 @@ source = st.selectbox(
 condition = st.selectbox("Condition", ["Wet", "Dry", "Mixed", "Unknown"])
 
 if st.button("ANALYZE WITH AI"):
+	st.session_state.pop(ANALYSIS_STATE_KEY, None)
 	if quantity <= 0:
 		st.error("Please enter a valid quantity greater than 0 kg.")
 	else:
@@ -154,25 +161,17 @@ if st.button("ANALYZE WITH AI"):
 			else:
 				st.success("Scientific information found: YES")
 				score = calculate_valorization_score(waste_record)
-				st.subheader("Valorization Suitability Score")
-				st.write(f"{score['total_score']} / 100")
-				st.write(f"Evidence strength: {score['evidence_strength']} / 25")
-				st.write(f"Component value: {score['component_value']} / 25")
-				st.write(f"Application potential: {score['application_potential']} / 20")
-				st.write(f"Processing feasibility: {score['processing_feasibility']} / 15")
-				st.write(f"Pathway maturity: {score['pathway_maturity']} / 15")
-				st.caption("Prototype decision-support score")
-				display_scientific_evidence(waste_record)
 
 				try:
+					user_context = {
+						"waste_type": selected_waste,
+						"quantity": f"{quantity:g}",
+						"source": source,
+						"condition": condition,
+					}
 					analysis = generate_analysis(
 						waste_record,
-						{
-							"waste_type": selected_waste,
-							"quantity": f"{quantity:g}",
-							"source": source,
-							"condition": condition,
-						},
+						user_context,
 						score,
 					)
 					analysis = validate_analysis_response(analysis)
@@ -183,8 +182,55 @@ if st.button("ANALYZE WITH AI"):
 				except (AIAnalysisError, ValueError) as error:
 					st.error(f"AI analysis failed: {error}")
 				else:
-					st.subheader("AI-generated analysis")
-					display_ai_analysis(analysis)
+					st.session_state[ANALYSIS_STATE_KEY] = {
+						"waste_record": waste_record,
+						"user_context": user_context,
+						"score": score,
+						"analysis": analysis,
+					}
+
+
+analysis_context = st.session_state.get(ANALYSIS_STATE_KEY)
+if analysis_context:
+	score = analysis_context["score"]
+	st.subheader("Valorization Suitability Score")
+	st.write(f"{score['total_score']} / 100")
+	st.write(f"Evidence strength: {score['evidence_strength']} / 25")
+	st.write(f"Component value: {score['component_value']} / 25")
+	st.write(f"Application potential: {score['application_potential']} / 20")
+	st.write(f"Processing feasibility: {score['processing_feasibility']} / 15")
+	st.write(f"Pathway maturity: {score['pathway_maturity']} / 15")
+	st.caption("Prototype decision-support score")
+	display_scientific_evidence(analysis_context["waste_record"])
+	st.subheader("AI-generated analysis")
+	display_ai_analysis(analysis_context["analysis"])
+
+	st.subheader("Ask BioValor AI")
+	question = st.text_input(
+		"Ask a follow-up question about this analysis",
+		placeholder="Why is this pathway recommended?",
+		key="followup_question",
+	)
+	if st.button("ASK QUESTION"):
+		if not question.strip():
+			st.error("Please enter a question.")
+		else:
+			try:
+				answer = ask_followup_question(
+					analysis_context["waste_record"],
+					analysis_context["user_context"],
+					analysis_context["score"],
+					analysis_context["analysis"],
+					question,
+				)
+				st.session_state[ANALYSIS_STATE_KEY]["followup_answer"] = answer
+			except MissingAPIKeyError as error:
+				st.warning(str(error))
+			except (AIAnalysisError, ValueError) as error:
+				st.error(f"Follow-up question failed: {error}")
+	if analysis_context.get("followup_answer"):
+		st.subheader("BioValor AI Answer")
+		st.write(analysis_context["followup_answer"])
 
 with st.expander("How is this score calculated?"):
 	st.write(

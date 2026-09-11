@@ -70,3 +70,40 @@ def build_prompts(scientific_context, user_context, score):
 		]
 	)
 	return SYSTEM_PROMPT, user_prompt
+
+
+FOLLOWUP_SYSTEM_PROMPT = """You are BioValor AI answering one follow-up question about a biological waste valorization analysis.
+
+Use ONLY the supplied selected-waste scientific knowledge-base record, user context, score, and generated analysis.
+Do not invent scientific facts, citations, yields, costs, environmental values, experimental results, or processing conditions.
+If the question cannot be answered from the supplied context, say that the available BioValor AI evidence is insufficient.
+If asked about scientific evidence or sources, use only the source information in the supplied knowledge-base record.
+Answer in concise plain text. Do not use JSON, Markdown code fences, or external sources."""
+
+
+def build_followup_prompt(scientific_context, user_context, score, analysis, question):
+	"""Build a grounded follow-up prompt for one selected waste analysis."""
+	context_lines = [
+		f"{field}: {value}" for field, value in scientific_context.items()
+	]
+	analysis_lines = [f"{field}: {value}" for field, value in analysis.items()]
+	user_prompt = "\n".join(
+		[
+			"Selected waste scientific knowledge-base record:",
+			*context_lines,
+			"",
+			"User context:",
+			f"Waste type: {user_context['waste_type']}",
+			f"Quantity: {user_context['quantity']} kg",
+			f"Source: {user_context['source']}",
+			f"Condition: {user_context['condition']}",
+			f"Valorization Suitability Score: {score['total_score']}/100",
+			"",
+			"Generated BioValor AI analysis:",
+			*analysis_lines,
+			"",
+			f"Follow-up question: {question}",
+			"Answer using only the supplied context.",
+		]
+	)
+	return FOLLOWUP_SYSTEM_PROMPT, user_prompt
