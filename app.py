@@ -4,6 +4,7 @@ import pandas as pd
 from ai.generator import AIAnalysisError, MissingAPIKeyError, generate_analysis
 from utils.data_loader import get_waste_data
 from utils.scoring import calculate_valorization_score
+from utils.validation import AIResponseValidationError, validate_analysis_response
 
 
 SUPPORTED_WASTES = [
@@ -174,8 +175,11 @@ if st.button("ANALYZE WITH AI"):
 						},
 						score,
 					)
+					analysis = validate_analysis_response(analysis)
 				except MissingAPIKeyError as error:
 					st.warning(str(error))
+				except AIResponseValidationError as error:
+					st.error(str(error))
 				except (AIAnalysisError, ValueError) as error:
 					st.error(f"AI analysis failed: {error}")
 				else:
