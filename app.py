@@ -19,6 +19,67 @@ SUPPORTED_WASTES = [
 ]
 
 
+def display_ai_analysis(analysis):
+	"""Render a structured AI response safely for the Streamlit dashboard."""
+	def text_value(field_name):
+		value = analysis.get(field_name)
+		return str(value).strip() if value not in (None, "") else "Not available"
+
+	def list_value(field_name):
+		value = analysis.get(field_name)
+		if not value:
+			return []
+		if isinstance(value, str):
+			return [value]
+		return [str(item).strip() for item in value if str(item).strip()]
+
+	primary_column, pathway_column = st.columns(2)
+	with primary_column:
+		st.subheader("Primary Component")
+		st.info(text_value("primary_component"))
+	with pathway_column:
+		st.subheader("Recommended Valorization Pathway")
+		st.success(text_value("recommended_pathway"))
+
+	st.subheader("Why This Pathway?")
+	st.write(text_value("reason"))
+
+	st.subheader("Processing Pathway")
+	processing_steps = list_value("processing_steps")
+	if processing_steps:
+		for step_number, step in enumerate(processing_steps, start=1):
+			st.markdown(f"{step_number}. {step}")
+	else:
+		st.info("Processing steps are not available.")
+
+	st.subheader("Alternative Pathways")
+	alternative_pathways = list_value("alternative_pathways")
+	if alternative_pathways:
+		for pathway in alternative_pathways:
+			st.markdown(f"- {pathway}")
+	else:
+		st.info("Alternative pathways are not available.")
+
+	st.subheader("Potential Applications")
+	applications = list_value("applications")
+	if applications:
+		for application in applications:
+			st.markdown(f"- {application}")
+	else:
+		st.info("Potential applications are not available.")
+
+	st.subheader("Limitations")
+	limitations = list_value("limitations")
+	if limitations:
+		for limitation in limitations:
+			st.warning(limitation)
+	else:
+		st.info("Limitations are not available.")
+
+	st.subheader("Evidence Level")
+	st.info(text_value("evidence_level"))
+
+
 st.title("BioValor AI")
 st.write("Transform biological waste into potential valuable resources.")
 
@@ -86,7 +147,7 @@ if st.button("ANALYZE WITH AI"):
 					st.error(f"AI analysis failed: {error}")
 				else:
 					st.subheader("AI-generated analysis")
-					st.write(analysis)
+					display_ai_analysis(analysis)
 
 with st.expander("How is this score calculated?"):
 	st.write(

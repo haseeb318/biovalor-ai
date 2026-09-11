@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import logging
 
 from dotenv import load_dotenv
 from google import genai
@@ -10,12 +11,63 @@ from google.genai import types
 from ai.prompts import build_prompts
 
 
+logger = logging.getLogger(__name__)
+
+
 class MissingAPIKeyError(RuntimeError):
 	"""Raised when the Gemini API key is not configured."""
 
 
 class AIAnalysisError(RuntimeError):
 	"""Raised when the Gemini request cannot be completed."""
+
+
+FALLBACK_MODELS = [
+	"gemini-3.5-flash",
+	"gemini-3.1-flash-lite",
+	"gemini-2.5-flash",
+	"gemini-2.5-flash-lite",
+]
+
+
+def _is_temporary_unavailable(error):
+	return (
+		isinstance(error, errors.APIError)
+		and getattr(error, "code", None) == 503
+		and str(getattr(error, "status", "")).upper() == "UNAVAILABLE"
+		and "UNAVAILABLE" in str(error).upper()
+	)
+
+
+def _generate_with_model(client, model, system_prompt, user_prompt, retries):
+	for attempt in range(retries + 1):
+		logger.info(
+			"Attempting Gemini model %s (attempt %s/%s).",
+			model,
+			attempt + 1,
+			retries + 1,
+		)
+		try:
+			return client.models.generate_content(
+				model=model,
+				contents=user_prompt,
+				config=types.GenerateContentConfig(
+					system_instruction=system_prompt,
+					response_mime_type="application/json",
+				),
+			)
+		except errors.APIError as error:
+			if not _is_temporary_unavailable(error):
+				raise
+			if attempt == retries:
+				raise
+			delay = 2 ** (attempt + 1)
+			logger.warning(
+				"Gemini model %s returned temporary 503; retrying in %s seconds.",
+				model,
+				delay,
+			)
+			time.sleep(delay)
 
 
 def generate_analysis(scientific_context, user_context, score):
@@ -40,30 +92,36 @@ def generate_analysis(scientific_context, user_context, score):
 
 	try:
 		client = genai.Client(api_key=api_key)
-		for attempt in range(4):
-			try:
-				response = client.models.generate_content(
-					model=model,
-					contents=user_prompt,
-					config=types.GenerateContentConfig(
-						system_instruction=system_prompt,
-						response_mime_type="application/json",
-					),
-				)
-				break
-			except errors.ServerError as error:
-				is_temporary_503 = (
-					getattr(error, "status", None) == 503
-					and "UNAVAILABLE" in str(error)
-				)
-				if not is_temporary_503 or attempt == 3:
-					if is_temporary_503:
-						raise AIAnalysisError(
-							"Gemini is temporarily unavailable after 3 retries. "
-							"Please try again later."
-						) from error
-					raise
-				time.sleep(2 ** (attempt + 1))
+		try:
+			response = _generate_with_model(
+				client, model, system_prompt, user_prompt, retries=3
+			)
+		except errors.APIError as primary_error:
+			if not _is_temporary_unavailable(primary_error):
+				raise
+
+			logger.warning(
+				"Primary Gemini model %s exhausted retries; trying fallback models.",
+				model,
+			)
+			for fallback_model in FALLBACK_MODELS:
+				try:
+					response = _generate_with_model(
+						client, fallback_model, system_prompt, user_prompt, retries=0
+					)
+					break
+				except errors.APIError as fallback_error:
+					if not _is_temporary_unavailable(fallback_error):
+						raise
+					logger.warning(
+						"Fallback Gemini model %s returned temporary 503; trying the next model.",
+						fallback_model,
+					)
+			else:
+				raise AIAnalysisError(
+					"Gemini is temporarily unavailable across all configured models. "
+					"Please try again later."
+				) from primary_error
 		analysis_text = (response.text or "").strip()
 	except Exception as error:
 		if isinstance(error, AIAnalysisError):
