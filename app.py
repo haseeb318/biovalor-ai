@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 from ai.generator import AIAnalysisError, MissingAPIKeyError, generate_analysis
 from utils.data_loader import get_waste_data
@@ -80,6 +81,37 @@ def display_ai_analysis(analysis):
 	st.info(text_value("evidence_level"))
 
 
+def display_scientific_evidence(waste_record):
+	"""Render authoritative evidence details from the selected knowledge-base record."""
+	def record_value(field_name):
+		value = waste_record.get(field_name)
+		if value is None or pd.isna(value) or not str(value).strip():
+			return "Not available"
+		return str(value).strip()
+
+	st.subheader("Scientific Evidence")
+	evidence_level = record_value("evidence_level")
+	source_title = record_value("source_title")
+	doi = record_value("doi")
+	source_url = record_value("source_url")
+
+	evidence_column, source_column = st.columns(2)
+	with evidence_column:
+		st.markdown("**Evidence Level**")
+		st.info(evidence_level)
+	with source_column:
+		st.markdown("**Source**")
+		st.write(source_title)
+
+	st.markdown("**DOI**")
+	st.write(doi)
+	if source_url == "Not available":
+		st.markdown("**Reference / View scientific source**")
+		st.write("Not available")
+	else:
+		st.markdown(f"**Reference / View scientific source:** [{source_url}]({source_url})")
+
+
 st.title("BioValor AI")
 st.write("Transform biological waste into potential valuable resources.")
 
@@ -129,6 +161,7 @@ if st.button("ANALYZE WITH AI"):
 				st.write(f"Processing feasibility: {score['processing_feasibility']} / 15")
 				st.write(f"Pathway maturity: {score['pathway_maturity']} / 15")
 				st.caption("Prototype decision-support score")
+				display_scientific_evidence(waste_record)
 
 				try:
 					analysis = generate_analysis(
