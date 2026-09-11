@@ -72,6 +72,51 @@ def _generate_with_model(
 			time.sleep(delay)
 
 
+def _generate_with_fallback(
+	client, model, system_prompt, user_prompt, response_mime_type="application/json"
+):
+	"""Generate content with primary retries followed by configured fallbacks."""
+	try:
+		return _generate_with_model(
+			client,
+			model,
+			system_prompt,
+			user_prompt,
+			retries=3,
+			response_mime_type=response_mime_type,
+		)
+	except errors.APIError as primary_error:
+		if not _is_temporary_unavailable(primary_error):
+			raise
+
+		logger.warning(
+			"Primary Gemini model %s exhausted retries; trying fallback models.",
+			model,
+		)
+		for fallback_model in FALLBACK_MODELS:
+			try:
+				return _generate_with_model(
+					client,
+					fallback_model,
+					system_prompt,
+					user_prompt,
+					retries=0,
+					response_mime_type=response_mime_type,
+				)
+			except errors.APIError as fallback_error:
+				if not _is_temporary_unavailable(fallback_error):
+					raise
+				logger.warning(
+					"Fallback Gemini model %s returned temporary 503; trying the next model.",
+					fallback_model,
+				)
+
+		raise AIAnalysisError(
+			"Gemini is temporarily unavailable across all configured models. "
+			"Please try again later."
+		) from primary_error
+
+
 def generate_analysis(scientific_context, user_context, score):
 	"""Generate an analysis from one scientific record and the current score."""
 	if scientific_context is None or (
@@ -94,36 +139,9 @@ def generate_analysis(scientific_context, user_context, score):
 
 	try:
 		client = genai.Client(api_key=api_key)
-		try:
-			response = _generate_with_model(
-				client, model, system_prompt, user_prompt, retries=3
-			)
-		except errors.APIError as primary_error:
-			if not _is_temporary_unavailable(primary_error):
-				raise
-
-			logger.warning(
-				"Primary Gemini model %s exhausted retries; trying fallback models.",
-				model,
-			)
-			for fallback_model in FALLBACK_MODELS:
-				try:
-					response = _generate_with_model(
-						client, fallback_model, system_prompt, user_prompt, retries=0
-					)
-					break
-				except errors.APIError as fallback_error:
-					if not _is_temporary_unavailable(fallback_error):
-						raise
-					logger.warning(
-						"Fallback Gemini model %s returned temporary 503; trying the next model.",
-						fallback_model,
-					)
-			else:
-				raise AIAnalysisError(
-					"Gemini is temporarily unavailable across all configured models. "
-					"Please try again later."
-				) from primary_error
+		response = _generate_with_fallback(
+			client, model, system_prompt, user_prompt
+		)
 		analysis_text = (response.text or "").strip()
 	except Exception as error:
 		if isinstance(error, AIAnalysisError):
@@ -169,41 +187,13 @@ def ask_followup_question(
 
 	try:
 		client = genai.Client(api_key=api_key)
-		try:
-			response = _generate_with_model(
-				client,
-				model,
-				system_prompt,
-				user_prompt,
-				retries=3,
-				response_mime_type=None,
-			)
-		except errors.APIError as primary_error:
-			if not _is_temporary_unavailable(primary_error):
-				raise
-			logger.warning(
-				"Primary Gemini model %s exhausted retries; trying fallback models.",
-				model,
-			)
-			for fallback_model in FALLBACK_MODELS:
-				try:
-					response = _generate_with_model(
-						client,
-						fallback_model,
-						system_prompt,
-						user_prompt,
-						retries=0,
-						response_mime_type=None,
-					)
-					break
-				except errors.APIError as fallback_error:
-					if not _is_temporary_unavailable(fallback_error):
-						raise
-			else:
-				raise AIAnalysisError(
-					"Gemini is temporarily unavailable across all configured models. "
-					"Please try again later."
-				) from primary_error
+		response = _generate_with_fallback(
+			client,
+			model,
+			system_prompt,
+			user_prompt,
+			response_mime_type=None,
+		)
 		answer = (response.text or "").strip()
 	except Exception as error:
 		if isinstance(error, AIAnalysisError):
