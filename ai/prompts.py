@@ -28,7 +28,19 @@ Do not modify or recalculate the score.
 
 Use the supplied scientific evidence and limitations when explaining the recommendation.
 
-Your concise recommendation must clearly identify the recommended pathway, why it is recommended, the primary component, the processing pathway, alternative pathways, potential applications, limitations, and scientific evidence or sources. If any requested information is unavailable, say so."""
+Return ONLY valid JSON using exactly these fields:
+{
+	"primary_component": "",
+	"recommended_pathway": "",
+	"reason": "",
+	"processing_steps": [],
+	"alternative_pathways": [],
+	"applications": [],
+	"limitations": [],
+	"evidence_level": ""
+}
+
+Use strings for the string fields and arrays of strings for the list fields. Do not include Markdown, code fences, or any additional fields. If any requested information is unavailable from the supplied context, say so in the relevant field. Clearly distinguish documented scientific evidence from reasonable interpretation."""
 
 
 def build_prompts(scientific_context, user_context, score):
@@ -52,9 +64,9 @@ def build_prompts(scientific_context, user_context, score):
 			f"Condition: {user_context['condition']}",
 			f"Valorization Suitability Score: {score_value}/100",
 			"",
-			"Provide a concise, evidence-grounded valorization recommendation. "
-			"Explain relevant documented pathways, products, applications, limitations, "
-			"and how the supplied score should be interpreted. Do not recalculate the score.",
+			"Return only the required JSON object. Populate it with a concise, "
+			"evidence-grounded recommendation using only the supplied context. "
+			"Do not recalculate the score.",
 		]
 	)
 	return SYSTEM_PROMPT, user_prompt

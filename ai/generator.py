@@ -1,5 +1,6 @@
 import os
 import time
+import json
 
 from dotenv import load_dotenv
 from google import genai
@@ -46,6 +47,7 @@ def generate_analysis(scientific_context, user_context, score):
 					contents=user_prompt,
 					config=types.GenerateContentConfig(
 						system_instruction=system_prompt,
+						response_mime_type="application/json",
 					),
 				)
 				break
@@ -62,13 +64,23 @@ def generate_analysis(scientific_context, user_context, score):
 						) from error
 					raise
 				time.sleep(2 ** (attempt + 1))
-		analysis = (response.text or "").strip()
+		analysis_text = (response.text or "").strip()
 	except Exception as error:
 		if isinstance(error, AIAnalysisError):
 			raise
 		raise AIAnalysisError(str(error)) from error
 
-	if not analysis:
+	if not analysis_text:
 		raise AIAnalysisError("Gemini returned an empty response.")
+
+	try:
+		analysis = json.loads(analysis_text)
+	except json.JSONDecodeError as error:
+		raise AIAnalysisError(
+			"Gemini returned invalid JSON instead of the required structured response."
+		) from error
+
+	if not isinstance(analysis, dict):
+		raise AIAnalysisError("Gemini returned JSON that was not an object.")
 
 	return analysis
