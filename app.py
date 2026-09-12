@@ -16,6 +16,7 @@ from utils.scoring import calculate_valorization_score
 from utils.validation import AIResponseValidationError, validate_analysis_response
 
 
+# Supported waste types currently available in the CSV knowledge base.
 SUPPORTED_WASTES = [
 	"Eggshell",
 	"Fish scales",
@@ -32,6 +33,7 @@ ANALYSIS_STATE_KEY = "biovalor_analysis_context"
 PAGE_STATE_KEY = "biovalor_current_page"
 
 
+# Configure the shared Streamlit page before rendering any content.
 st.set_page_config(
 	page_title="BioValor AI",
 	page_icon="BV",
@@ -41,6 +43,7 @@ st.set_page_config(
 
 # Apply the shared visual system and Streamlit layout overrides.
 def apply_page_style():
+	# Keep all presentation rules in one stylesheet so page components stay focused on content.
 	st.markdown(
 		"""
 		<style>
@@ -900,6 +903,7 @@ def apply_page_style():
 
 # Render navigation and keep the selected page in session state.
 def render_navbar():
+	# Query parameters provide lightweight navigation between the Home and About views.
 	page = st.query_params.get("page", "Home")
 	if page not in ("Home", "About"):
 		page = "Home"
@@ -926,18 +930,19 @@ def render_navbar():
 
 # Render the reusable hero area for Home and About pages.
 def render_header(page_name):
+	# The same evidence-focused hero is shared by both top-level pages.
 	st.markdown(
 		f"""
 		<div class="biovalor-header">
 			<div class="biovalor-kicker">{page_name}</div>
-			<h1 class="biovalor-title">Turn waste streams into informed pathways</h1>
-			<p class="biovalor-tagline">
+			<h1 class="biovalor-title">
 				Explore practical valorization opportunities grounded in scientific evidence.
-			</p>
+			</h1>
 			<p class="biovalor-description">
-				Describe the material, its source, and current condition. The prototype
-				combines a curated knowledge base with transparent scoring and AI-assisted
-				interpretation to help you compare what the waste could become.
+				Describe the material, its source, and current condition. <strong>BioValor AI
+				combines our curated scientific knowledge base, transparent scoring, and
+				AI-assisted interpretation to identify and compare promising valorization
+				pathways.</strong>
 			</p>
 		</div>
 		""",
@@ -947,6 +952,7 @@ def render_header(page_name):
 
 # Render the full-width footer and project status badges.
 def render_footer():
+	# The footer communicates the prototype's evidence and deployment posture.
 	st.markdown(
 		"""
 		<div class="footer">
@@ -959,9 +965,7 @@ def render_footer():
 					</p>
 				</div>
 				<div class="footer-links">
-					<span class="footer-pill">CSV grounded</span>
 					<span class="footer-pill">Evidence aware</span>
-					<span class="footer-pill">Hackathon prototype</span>
 				</div>
 			</div>
 		</div>
@@ -1005,6 +1009,7 @@ def list_from_analysis(analysis, field_name):
 
 # Display the generated recommendation in structured result sections.
 def display_ai_analysis(analysis):
+	# Render the validated AI schema as separate sections instead of one long response.
 	primary_column, pathway_column = st.columns(2)
 	with primary_column:
 		st.markdown(
@@ -1073,6 +1078,7 @@ def display_ai_analysis(analysis):
 
 # Display source, DOI, links, and evidence level for a waste record.
 def display_scientific_evidence(waste_record):
+	# Keep source metadata visible so recommendations remain traceable to the knowledge base.
 	def record_value(field_name):
 		value = waste_record.get(field_name)
 		if value is None or pd.isna(value) or not str(value).strip():
@@ -1127,6 +1133,7 @@ def display_scientific_evidence(waste_record):
 
 # Display the total score and its weighted component breakdown.
 def display_score(score):
+	# The score dashboard shows both the total and the contribution of each criterion.
 	score_items = [
 		("Evidence", score["evidence_strength"], 25),
 		("Component", score["component_value"], 25),
@@ -1169,6 +1176,7 @@ def display_score(score):
 
 # Render and collect the waste profile form values.
 def render_analysis_input():
+	# The regular button intentionally avoids native form-submit behavior on Enter.
 	with st.container(border=True):
 		st.markdown(
 			"""
@@ -1239,6 +1247,7 @@ def render_analysis_input():
 
 # Run validation, scoring, retrieval, and AI analysis for one submission.
 def handle_analysis(selected_waste, quantity, source, condition):
+	# This is the main orchestration path: validate, retrieve, score, generate, then store.
 	if quantity <= 0:
 		st.error("Please enter a valid quantity greater than 0 kg.")
 		return
@@ -1328,6 +1337,7 @@ def handle_analysis(selected_waste, quantity, source, condition):
 
 # Render saved results and the follow-up question workflow.
 def render_analysis_results():
+	# Results are read from session state so navigation reruns do not discard the analysis.
 	analysis_context = st.session_state.get(ANALYSIS_STATE_KEY)
 	if not analysis_context:
 		return
@@ -1367,6 +1377,7 @@ def render_analysis_results():
 
 # Explain how the five prototype score factors are weighted.
 def render_score_explanation():
+	# Keep the scoring explanation synchronized with the five weighted score criteria.
 	score_factors = [
 		("Evidence strength", "25 points", "Based on the evidence level in the scientific knowledge base."),
 		("Component value", "25 points", "Based on documented major components and valorization potential."),
@@ -1401,6 +1412,7 @@ def render_score_explanation():
 
 # Render the primary waste analysis experience.
 def render_home_page():
+	# Home combines input, analysis execution, saved results, and the score explanation.
 	render_header("Home")
 	render_workflow()
 	st.divider()
@@ -1416,6 +1428,7 @@ def render_home_page():
 
 # Render project context, architecture, evidence, and scoring guidance.
 def render_about_page():
+	# About explains the evidence model, supported materials, and prototype limitations.
 	render_header("About")
 
 	st.markdown(
@@ -1442,7 +1455,7 @@ def render_about_page():
 	st.subheader("How the System Works")
 	architecture_items = [
 		"Waste Input",
-		"CSV Knowledge",
+		"Curated Knowledge Base (dataset)",
 		"AI Analysis",
 		"Validation",
 		"Score",
@@ -1457,6 +1470,51 @@ def render_about_page():
 	render_score_explanation()
 	st.markdown('<div class="about-divider"><span class="about-divider-mark"></span></div>', unsafe_allow_html=True)
 
+	st.subheader("Supported Waste Types")
+	waste_markup = "".join(
+		f'<div class="about-waste-item">{waste_name}</div>'
+		for waste_name in SUPPORTED_WASTES
+	)
+	st.markdown(f'<div class="about-waste-grid">{waste_markup}</div>', unsafe_allow_html=True)
+
+	st.markdown('<div class="about-divider"><span class="about-divider-mark"></span></div>', unsafe_allow_html=True)
+	st.subheader("Future Waste Types")
+	st.markdown(
+		'<p class="about-section-lead">Planned additions for broader biological waste coverage in future releases.</p>',
+		unsafe_allow_html=True,
+	)
+	future_waste_types = [
+		"Potato peel",
+		"Tomato pomace",
+		"Apple pomace",
+		"Grape pomace",
+		"Olive pomace",
+		"Pomegranate peel",
+		"Pineapple peel",
+		"Mango peel",
+		"Onion peel",
+		"Garlic peel",
+		"Corn stover",
+		"Wheat straw",
+		"Rice straw",
+		"Peanut shell",
+		"Walnut shell",
+		"Coconut shell",
+		"Brewers' spent grain",
+		"Dairy whey",
+		"Cassava peel",
+		"Cocoa pod husk",
+	]
+	future_waste_markup = "".join(
+		f'<div class="about-waste-item">{waste_name}</div>'
+		for waste_name in future_waste_types
+	)
+	st.markdown(
+		f'<div class="about-waste-grid">{future_waste_markup}</div>',
+		unsafe_allow_html=True,
+	)
+
+	st.markdown('<div class="about-divider"><span class="about-divider-mark"></span></div>', unsafe_allow_html=True)
 	st.subheader("Scientific Grounding")
 	st.markdown(
 		"""
@@ -1471,8 +1529,8 @@ def render_about_page():
 		""",
 		unsafe_allow_html=True,
 	)
-	st.markdown('<div class="about-divider"><span class="about-divider-mark"></span></div>', unsafe_allow_html=True)
 
+	st.markdown('<div class="about-divider"><span class="about-divider-mark"></span></div>', unsafe_allow_html=True)
 	st.subheader("Prototype Scoring")
 	st.markdown(
 		"""
@@ -1488,20 +1546,12 @@ def render_about_page():
 		unsafe_allow_html=True,
 	)
 
-	st.markdown('<div class="about-divider"><span class="about-divider-mark"></span></div>', unsafe_allow_html=True)
-
-	st.subheader("Supported Waste Types")
-	waste_markup = "".join(
-		f'<div class="about-waste-item">{waste_name}</div>'
-		for waste_name in SUPPORTED_WASTES
-	)
-	st.markdown(f'<div class="about-waste-grid">{waste_markup}</div>', unsafe_allow_html=True)
-
 	render_footer()
 
 
 # Initialize the application and render the selected route.
 def main():
+	# Render only the selected route; Streamlit reruns this function on interaction.
 	apply_page_style()
 	render_navbar()
 	page = st.session_state.get(PAGE_STATE_KEY, "Home")
