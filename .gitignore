@@ -1,4 +1,11 @@
+# Keep local secrets, environments, caches, and editor files out of Git.
 .env
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+.DS_Store
 __pycache__/
 *.pyc
 .venv/

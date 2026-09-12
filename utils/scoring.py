@@ -1,4 +1,4 @@
-"""Transparent prototype scoring for scientific knowledge-base records."""
+# """Transparent prototype scoring for scientific knowledge-base records."""
 
 
 MAX_SCORES = {
@@ -16,37 +16,32 @@ EVIDENCE_SCORES = {
 	"peer-reviewed review evidence": 20,
 }
 
-
+# Normalize one knowledge-base field for scoring.
 def _text(waste_data, field_name):
-	"""Return a normalized field value from a Pandas Series or mapping."""
 	value = waste_data.get(field_name, "")
 	return "" if value is None else str(value).strip()
 
-
+# Count documented semicolon-separated entries.
 def _count_entries(value):
 	return len([entry for entry in value.split(";") if entry.strip()])
 
-
+# Convert a documented evidence level into its fixed score.
 def _evidence_strength(evidence_level):
-	"""Map only evidence levels present in the knowledge base to fixed scores."""
 	return EVIDENCE_SCORES.get(evidence_level.lower(), 0)
 
-
+# Score documented components and valorization pathways.
 def _component_value(major_components, pathways):
-	"""Score documented recoverable components and their documented pathways."""
 	component_count = _count_entries(major_components)
 	pathway_count = _count_entries(pathways)
 	return min(25, component_count * 4 + pathway_count * 3)
 
-
+# Score documented products and application categories.
 def _application_potential(products, applications):
-	"""Score the number of documented products and application categories."""
 	category_count = _count_entries(products) + _count_entries(applications)
 	return min(20, category_count * 2)
 
-
+# Deduct feasibility points for documented processing burdens.
 def _processing_feasibility(processing_steps, limitations):
-	"""Start at 15 and deduct for explicit complexity or burden indicators."""
 	text = f"{processing_steps} {limitations}".lower()
 	penalty = 0
 
@@ -62,18 +57,16 @@ def _processing_feasibility(processing_steps, limitations):
 
 	return max(0, min(15, 15 - penalty))
 
-
+# Score pathway specificity, breadth, and supporting evidence.
 def _pathway_maturity(pathway, known_pathways, evidence_level):
-	"""Score documented pathway specificity, breadth, and evidence strength."""
 	pathway_count = _count_entries(known_pathways)
 	score = 4 if pathway else 0
 	score += min(6, pathway_count * 2)
 	score += 5 if _evidence_strength(evidence_level) >= 20 else 0
 	return min(15, score)
 
-
+# Calculate the bounded score and return every component.
 def calculate_valorization_score(waste_data):
-	"""Return a bounded, transparent Valorization Suitability Score breakdown."""
 	if waste_data is None:
 		return None
 

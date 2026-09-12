@@ -1,3 +1,6 @@
+# """Prompt templates for grounded BioValor AI analysis and follow-up questions."""
+
+
 SYSTEM_PROMPT = """You are BioValor AI, a scientific decision-support assistant for biological waste valorization.
 
 Analyze the selected waste using ONLY the supplied scientific knowledge-base context and user information.
@@ -42,9 +45,8 @@ Return ONLY valid JSON using exactly these fields:
 
 Use strings for the string fields and arrays of strings for the list fields. Do not include Markdown, code fences, or any additional fields. If any requested information is unavailable from the supplied context, say so in the relevant field. Clearly distinguish documented scientific evidence from reasonable interpretation."""
 
-
+# Build the system and user prompts for a structured recommendation.
 def build_prompts(scientific_context, user_context, score):
-	"""Build prompts containing only one waste record and its user context."""
 	if isinstance(scientific_context, str):
 		context_lines = [scientific_context]
 	else:
@@ -80,9 +82,8 @@ If the question cannot be answered from the supplied context, say that the avail
 If asked about scientific evidence or sources, use only the source information in the supplied knowledge-base record.
 Answer in concise plain text. Do not use JSON, Markdown code fences, or external sources."""
 
-
+# Build the grounded prompt for a follow-up answer.
 def build_followup_prompt(scientific_context, user_context, score, analysis, question):
-	"""Build a grounded follow-up prompt for one selected waste analysis."""
 	context_lines = [
 		f"{field}: {value}" for field, value in scientific_context.items()
 	]

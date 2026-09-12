@@ -1,3 +1,5 @@
+"""Validation rules for structured responses returned by the AI provider."""
+
 from collections.abc import Mapping
 
 
@@ -14,15 +16,15 @@ REQUIRED_LIST_FIELDS = (
 	"limitations",
 )
 
-
+# Signal that a generated response does not match the required schema.
 class AIResponseValidationError(ValueError):
 	"""Raised when an AI response does not match the required schema."""
 
-
+# Check whether a required response value contains text.
 def _has_text(value):
 	return isinstance(value, str) and bool(value.strip())
 
-
+# Check whether a response value is a usable string list.
 def _is_usable_list(value):
 	if isinstance(value, str):
 		return bool(value.strip())
@@ -30,9 +32,8 @@ def _is_usable_list(value):
 		return False
 	return all(isinstance(item, str) and item.strip() for item in value)
 
-
+# Validate the complete structured response before display.
 def validate_analysis_response(analysis):
-	"""Validate and return a structured AI analysis before it is displayed."""
 	if not isinstance(analysis, Mapping):
 		raise AIResponseValidationError(
 			"AI response incomplete. Please try again."

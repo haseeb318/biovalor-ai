@@ -1,3 +1,5 @@
+# """Pathway comparison helpers for validated waste analyses."""
+
 import re
 
 
@@ -8,16 +10,16 @@ COMPARISON_CRITERIA = (
 	"Application potential",
 )
 
-
+# Normalize one comparison record field.
 def _text(record, field_name):
 	value = record.get(field_name, "")
 	return "" if value is None else str(value).strip()
 
-
+# Tokenize text for documented pathway matching.
 def _tokens(value):
 	return set(re.findall(r"[a-z0-9]+", value.lower()))
 
-
+# Collect unique recommended and alternative pathways.
 def _pathways(analysis):
 	values = [analysis.get("recommended_pathway", "")]
 	alternatives = analysis.get("alternative_pathways", [])
@@ -35,7 +37,7 @@ def _pathways(analysis):
 			seen.add(key)
 	return result
 
-
+# Convert evidence wording into a comparison rating.
 def _evidence_rating(evidence_level):
 	level = evidence_level.casefold()
 	if "systematic" in level or "comprehensive" in level:
@@ -44,7 +46,7 @@ def _evidence_rating(evidence_level):
 		return "Medium"
 	return "Not available"
 
-
+# Rate pathway alignment with documented resource information.
 def _resource_rating(pathway, record):
 	pathway_tokens = _tokens(pathway)
 	documented = " ".join(
@@ -59,7 +61,7 @@ def _resource_rating(pathway, record):
 		return "Not available"
 	return "High"
 
-
+# Rate the documented processing complexity of a pathway.
 def _complexity_rating(pathway, record):
 	documented = " ".join(
 		[pathway, _text(record, "basic_processing_steps"), _text(record, "limitations")]
@@ -85,7 +87,7 @@ def _complexity_rating(pathway, record):
 		return "Medium"
 	return "Not available"
 
-
+# Rate pathway alignment with documented applications.
 def _application_rating(pathway, record):
 	pathway_tokens = _tokens(pathway)
 	documented = " ".join(
@@ -96,9 +98,8 @@ def _application_rating(pathway, record):
 		return "Not available"
 	return "High"
 
-
+# Build comparison rows for the recommended and alternative pathways.
 def build_pathway_comparison(waste_record, analysis):
-	"""Build a comparison table from one CSV record and one validated analysis."""
 	pathways = _pathways(analysis)
 	if len(pathways) < 2:
 		return []

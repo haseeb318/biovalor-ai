@@ -1,3 +1,5 @@
+# """Knowledge-base loading helpers for selected biological waste records."""
+
 from pathlib import Path
 
 import pandas as pd
@@ -5,9 +7,8 @@ import pandas as pd
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "waste_knowledge.csv"
 
-
+# Load the selected waste record from the CSV knowledge base.
 def get_waste_data(waste_name):
-	"""Return the single knowledge-base record for a waste type, if found."""
 	if not DATA_PATH.exists():
 		raise FileNotFoundError(
 			f"Knowledge base file was not found at {DATA_PATH}."
