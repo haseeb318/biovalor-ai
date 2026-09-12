@@ -1,4 +1,4 @@
-"""Validation rules for structured responses returned by the AI provider."""
+# """Validation rules for structured responses returned by the AI provider."""
 
 from collections.abc import Mapping
 

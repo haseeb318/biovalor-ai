@@ -56,6 +56,9 @@ def apply_page_style():
 		html, body, [class*="css"] {
 			font-family: "Inter", "Segoe UI", Arial, sans-serif;
 		}
+		html, body {
+			overflow-x: hidden;
+		}
 		section[data-testid="stSidebar"] {
 			display: none;
 		}
@@ -78,6 +81,8 @@ def apply_page_style():
 			margin-right: calc(50% - 50vw);
 			padding-left: max(1.1rem, calc((100vw - 1080px) / 2 + -8rem));
 			padding-right: max(1.1rem, calc((100vw - 1080px) / 2 + -8rem));
+			box-sizing: border-box;
+			max-width: 100vw;
 		}
 		.nav-brand {
 			color: #ffffff;
@@ -206,7 +211,8 @@ def apply_page_style():
 			font-size: 0.9rem;
 			margin: 0.1rem 0 0.55rem;
 		}
-		div[data-testid="stForm"] {
+		div[data-testid="stForm"],
+		div[data-testid="stVerticalBlockBorderWrapper"] {
 			background: linear-gradient(145deg, #fbfefc 0%, #f0f8f4 100%);
 			border: 1px solid #b8d7ca;
 			border-radius: 12px;
@@ -239,24 +245,30 @@ def apply_page_style():
 			margin-top: 0.35rem;
 			max-width: 720px;
 		}
-		div[data-testid="stForm"] label p {
+		div[data-testid="stForm"] label p,
+		div[data-testid="stVerticalBlockBorderWrapper"] label p {
 			color: #123f31;
 			font-size: 0.92rem;
 			font-weight: 800;
 		}
 		div[data-testid="stForm"] [data-testid="stSelectbox"] > div > div,
-		div[data-testid="stForm"] [data-testid="stNumberInput"] input {
+		div[data-testid="stForm"] [data-testid="stNumberInput"] input,
+		div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stSelectbox"] > div > div,
+		div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stNumberInput"] input {
 			background: #ffffff;
 			border-color: #a9cfc0;
 			border-radius: 7px;
 		}
 		div[data-testid="stForm"] [data-testid="stSelectbox"] > div > div:focus-within,
-		div[data-testid="stForm"] [data-testid="stNumberInput"] input:focus {
+		div[data-testid="stForm"] [data-testid="stNumberInput"] input:focus,
+		div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stSelectbox"] > div > div:focus-within,
+		div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stNumberInput"] input:focus {
 			border-color: #0f766e;
 			box-shadow: 0 0 0 1px #0f766e;
 		}
 		div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button,
-		div[data-testid="stForm"] button[kind="primary"] {
+		div[data-testid="stForm"] button[kind="primary"],
+		div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] button[kind="primary"] {
 			background: #f2c14e;
 			border: 1px solid #d6a936;
 			border-radius: 7px;
@@ -267,15 +279,18 @@ def apply_page_style():
 			min-height: 2.7rem;
 			transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 		}
-		div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] {
+		div[data-testid="stForm"] div[data-testid="stFormSubmitButton"],
+		div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] {
 			display: flex;
 			justify-content: flex-end;
 		}
-		div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button {
+		div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button,
+		div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] button {
 			width: auto;
 		}
 		div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button:hover,
-		div[data-testid="stForm"] button[kind="primary"]:hover {
+		div[data-testid="stForm"] button[kind="primary"]:hover,
+		div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stButton"] button[kind="primary"]:hover {
 			background: #e5b33d;
 			box-shadow: 0 7px 16px rgba(180, 132, 30, 0.27);
 			color: #123f31;
@@ -408,6 +423,107 @@ def apply_page_style():
 			background: #fbfefc;
 			border: 1px solid #cfe4dc;
 			border-radius: 10px;
+		}
+		.evidence-panel-heading {
+			align-items: center;
+			border-bottom: 1px solid #dcece5;
+			display: flex;
+			gap: 0.55rem;
+			justify-content: space-between;
+			margin-bottom: 0.85rem;
+			padding-bottom: 0.7rem;
+		}
+		.evidence-panel-title {
+			color: #123f31;
+			font-size: 1.15rem;
+			font-weight: 800;
+		}
+		.evidence-panel-kicker {
+			color: #0f766e;
+			font-size: 0.72rem;
+			font-weight: 800;
+			letter-spacing: 0.07em;
+			text-transform: uppercase;
+		}
+		.evidence-field-label {
+			color: #526f63;
+			font-size: 0.74rem;
+			font-weight: 800;
+			letter-spacing: 0.05em;
+			margin: 0.75rem 0 0.25rem;
+			text-transform: uppercase;
+		}
+		.evidence-field-value {
+			background: #ffffff;
+			border-left: 3px solid #0f766e;
+			border-radius: 5px;
+			color: #123f31;
+			font-size: 0.92rem;
+			font-weight: 700;
+			line-height: 1.5;
+			padding: 0.65rem 0.75rem;
+		}
+		.evidence-links {
+			background: #ffffff;
+			border: 1px solid #dcece5;
+			border-radius: 6px;
+			margin-top: 0.25rem;
+			padding: 0.35rem 0.75rem;
+		}
+		.evidence-level {
+			background: #fff8df;
+			border: 1px solid #ead9a7;
+			border-radius: 999px;
+			color: #78580f;
+			display: inline-block;
+			font-size: 0.82rem;
+			font-weight: 800;
+			padding: 0.38rem 0.7rem;
+		}
+		.analysis-loader {
+			align-items: center;
+			background: linear-gradient(135deg, #123f31 0%, #115e59 100%);
+			border: 1px solid #0f766e;
+			border-radius: 10px;
+			box-shadow: 0 8px 20px rgba(18, 64, 49, 0.12);
+			color: #eefaf5;
+			display: flex;
+			gap: 0.8rem;
+			margin: 0.8rem 0 1rem;
+			padding: 0.95rem 1rem;
+		}
+		.analysis-loader-icon {
+			align-items: center;
+			background: rgba(242, 193, 78, 0.18);
+			border: 1px solid rgba(242, 193, 78, 0.65);
+			border-radius: 50%;
+			display: flex;
+			flex-shrink: 0;
+			height: 2.35rem;
+			justify-content: center;
+			width: 2.35rem;
+		}
+		.analysis-loader-dot {
+			animation: analysis-pulse 1.1s ease-in-out infinite;
+			background: #f2c14e;
+			border-radius: 50%;
+			height: 0.55rem;
+			width: 0.55rem;
+		}
+		.analysis-loader-title {
+			color: #ffffff;
+			font-size: 0.98rem;
+			font-weight: 800;
+		}
+		.analysis-loader-copy {
+			color: #dff3eb;
+			font-size: 0.82rem;
+			line-height: 1.4;
+			margin-top: 0.16rem;
+		}
+		@keyframes analysis-pulse {
+			0%, 100% { box-shadow: 0 0 0 0 rgba(242, 193, 78, 0.5); transform: scale(0.85); }
+			50% { box-shadow: 0 0 0 0.38rem rgba(242, 193, 78, 0); transform: scale(1); }
 		}
 		.score-dashboard {
 			background: linear-gradient(145deg, #f8fcfa 0%, #edf7f2 100%);
@@ -737,6 +853,8 @@ def apply_page_style():
 			margin-right: calc(50% - 50vw);
 			padding-left: max(1.25rem, calc((100vw - 1180px) / 2 + -4.75rem));
 			padding-right: max(1.25rem, calc((100vw - 1180px) / 2 + -4.75rem));
+			box-sizing: border-box;
+			max-width: 100vw;
 			position: sticky;
 			bottom: 0;
 			z-index: 900;
@@ -961,27 +1079,50 @@ def display_scientific_evidence(waste_record):
 			return "Not available"
 		return str(value).strip()
 
-	with st.expander("Scientific Evidence", expanded=True):
+	with st.container(border=True):
 		source_title = record_value("source_title")
 		doi = record_value("doi")
 		source_url = record_value("source_url")
 		evidence_level = record_value("evidence_level")
 
-		st.markdown("**Source**")
-		st.write(source_title)
+		st.markdown(
+			"""
+			<div class="evidence-panel-heading">
+				<div class="evidence-panel-title">Scientific Evidence</div>
+				<div class="evidence-panel-kicker">Knowledge base</div>
+			</div>
+			""",
+			unsafe_allow_html=True,
+		)
+		st.markdown('<div class="evidence-field-label">Source</div>', unsafe_allow_html=True)
+		st.markdown(
+			f'<div class="evidence-field-value">{html.escape(source_title)}</div>',
+			unsafe_allow_html=True,
+		)
 
-		st.markdown("**DOI**")
-		st.write(doi)
+		st.markdown('<div class="evidence-field-label">DOI</div>', unsafe_allow_html=True)
+		st.markdown(
+			f'<div class="evidence-field-value">{html.escape(doi)}</div>',
+			unsafe_allow_html=True,
+		)
+
+		st.markdown(
+			'<div class="evidence-field-label">Reference / View scientific source</div>',
+			unsafe_allow_html=True,
+		)
 		if source_url == "Not available":
-			st.markdown("**Reference / View scientific source**")
-			st.write("Not available")
+			st.markdown('<div class="evidence-links">Not available</div>', unsafe_allow_html=True)
 		else:
-			st.markdown("**Reference / View scientific source**")
+			st.markdown('<div class="evidence-links">', unsafe_allow_html=True)
 			for url in [item.strip() for item in source_url.split(";") if item.strip()]:
 				st.markdown(f"- [{url}]({url})")
+			st.markdown("</div>", unsafe_allow_html=True)
 
-		st.markdown("**Evidence Level**")
-		st.info(evidence_level)
+		st.markdown('<div class="evidence-field-label">Evidence Level</div>', unsafe_allow_html=True)
+		st.markdown(
+			f'<div class="evidence-level">{html.escape(evidence_level)}</div>',
+			unsafe_allow_html=True,
+		)
 
 
 # Display the total score and its weighted component breakdown.
@@ -1028,7 +1169,7 @@ def display_score(score):
 
 # Render and collect the waste profile form values.
 def render_analysis_input():
-	with st.form("waste_profile_form", border=True):
+	with st.container(border=True):
 		st.markdown(
 			"""
 			<div class="form-header">
@@ -1087,9 +1228,10 @@ def render_analysis_input():
 				help="Select the state of the material before any treatment or processing.",
 			)
 
-		submitted = st.form_submit_button(
+		submitted = st.button(
 			"ANALYZE WITH BIOVALOR AI",
 			type="primary",
+			key="analyze_waste_button",
 		)
 
 	return selected_waste, quantity, source, condition, submitted
@@ -1129,6 +1271,25 @@ def handle_analysis(selected_waste, quantity, source, condition):
 
 	st.success("Scientific information found: YES")
 	score = calculate_valorization_score(waste_record)
+	st.info(
+		"Your waste profile is ready. BioValor AI is reviewing the scientific "
+		"evidence and preparing a grounded valorization recommendation."
+	)
+	loading_placeholder = st.empty()
+	loading_placeholder.markdown(
+		"""
+		<div class="analysis-loader">
+			<div class="analysis-loader-icon"><div class="analysis-loader-dot"></div></div>
+			<div>
+				<div class="analysis-loader-title">Analyzing your waste stream</div>
+				<div class="analysis-loader-copy">
+					Connecting the selected material to scientific evidence and preparing your recommendation.
+				</div>
+			</div>
+		</div>
+		""",
+		unsafe_allow_html=True,
+	)
 
 	try:
 		user_context = {
@@ -1137,19 +1298,26 @@ def handle_analysis(selected_waste, quantity, source, condition):
 			"source": source,
 			"condition": condition,
 		}
-		analysis = generate_analysis(
-			waste_record,
-			user_context,
-			score,
-		)
-		analysis = validate_analysis_response(analysis)
+		with st.spinner(
+			"Generating an evidence-aware recommendation..."
+		):
+			analysis = generate_analysis(
+				waste_record,
+				user_context,
+				score,
+			)
+			analysis = validate_analysis_response(analysis)
 	except MissingAPIKeyError as error:
+		loading_placeholder.empty()
 		st.warning(str(error))
 	except AIResponseValidationError as error:
+		loading_placeholder.empty()
 		st.error(str(error))
 	except (AIAnalysisError, ValueError) as error:
+		loading_placeholder.empty()
 		st.error(f"AI analysis failed: {error}")
 	else:
+		loading_placeholder.empty()
 		st.session_state[ANALYSIS_STATE_KEY] = {
 			"waste_record": waste_record,
 			"user_context": user_context,
